@@ -3,7 +3,9 @@ import { dashboardComponent, dashboardViewHolderId } from '../dashboard/dashboar
 
 export function homeView() {
   const hView = homeComponent();
-  $(`#${homeViewHolderId}`).empty().append(hView);
+  // $(`#${homeViewHolderId}`).empty().append(hView);
+  document.getElementById(homeViewHolderId).innerHTML = '';
+  document.getElementById(homeViewHolderId).appendChild(hView);
   // hView.querySelector('#git-login').addEventListener('click', () => { gitLogin(); });
   return hView;
 }
