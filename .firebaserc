@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "fir-setup-81b8d"
+    "default": "fir-setup-81b8d",
+    "login-authentication": "login-authentication-e77f3"
   }
 }
