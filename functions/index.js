@@ -95,3 +95,14 @@ exports.saveUpdateUser = functions.https.onRequest((req, res) => {
     }
     
 });
+
+exports.getUser = functions.https.onRequest((req,res) => {
+    const userId = req.query.userId;
+    console.log("userId: "+userId);
+
+    return admin.database().ref('/users/'+userId).once('value', (snapshot) => {
+        var data = snapshot.val();
+        console.log(data);
+        res.json(data);
+     });
+});
