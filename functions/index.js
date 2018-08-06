@@ -19,6 +19,7 @@ exports.addMessage = functions.https.onRequest((req, res) => {
     const original = req.query.text;
     // Push the new message into the Realtime Database using the Firebase Admin SDK.
     return admin.database().ref('/messages').push({original: original}).then((snapshot) => {
+        console.log(snapshot);
         // Redirect with 303 SEE OTHER to the URL of the pushed object in the Firebase console.
         return res.redirect(303, snapshot.ref.toString());
     });
@@ -36,4 +37,61 @@ exports.makeUppercase = functions.database.ref('/messages/{pushId}/original')
     // writing to the Firebase Realtime Database.
     // Setting an "uppercase" sibling in the Realtime Database returns a Promise.
     return snapshot.ref.parent.child('uppercase').set(uppercase);
+});
+
+// Save update user.
+
+// **URL FORMAT**
+//saveUpdateUser?userId=myuserid6
+// **JSON FORMAT**
+// {
+// 	"data":
+// 	{
+// 		"username":"onetwothreefour",
+// 		"email":"xyz@mail.com",
+// 		"phone":"239472974927"
+// 	},
+// 	"action":"UPDATE_USER"
+// }
+exports.saveUpdateUser = functions.https.onRequest((req, res) => {
+    const userId = req.query.userId;
+    const data = req.body.data;
+    const action = req.body.action;
+    console.log("userId: "+userId);
+    console.log(req.query);
+    console.log(req.body);
+    console.log("Action: "+action);
+
+    switch(action)
+    {
+        case "CREATE_USER":
+        return admin.database().ref('/users/'+userId).set(data, (error)  => {
+            //console.log(snapshot);
+            if(error)
+            {
+                console.log("Error occurred while saving user: "+error);
+                return res.json("Error occurred while saving user: "+error);
+            }
+            else
+            {
+                console.log("User saved successfully");
+                return res.json("User saved successfully");
+            }
+        });
+        case "UPDATE_USER":
+        return admin.database().ref('/users/'+userId).update(data, (error)  => {
+            //console.log(snapshot);
+            if(error)
+            {
+                console.log("Error occurred while updating user: "+error);
+                return res.json("Error occurred while updating user: "+error);
+            }
+            else
+            {
+                console.log("User updated successfully");
+                return res.json("User updated successfully");
+            }
+        });
+    }
+    
 });
