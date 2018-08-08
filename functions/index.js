@@ -5,6 +5,9 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp();
 
+// To handle CROSS-ORIGIN exception
+const cors = require('cors')({ origin: true });
+
 // Create and Deploy Your First Cloud Functions
 // https://firebase.google.com/docs/functions/write-firebase-functions
 
@@ -39,70 +42,135 @@ exports.makeUppercase = functions.database.ref('/messages/{pushId}/original')
     return snapshot.ref.parent.child('uppercase').set(uppercase);
 });
 
+
 // Save update user.
 
 // **URL FORMAT**
 //saveUpdateUser?userId=myuserid6
 // **JSON FORMAT**
 // {
-// 	"data":
-// 	{
-// 		"username":"onetwothreefour",
-// 		"email":"xyz@mail.com",
-// 		"phone":"239472974927"
-// 	},
-// 	"action":"UPDATE_USER"
+//     "username":"onetwothreefour",
+//     "email":"xyz@mail.com",
+//     "phone":"239472974927"
 // }
-exports.saveUpdateUser = functions.https.onRequest((req, res) => {
-    const userId = req.query.userId;
-    const data = req.body.data;
-    const action = req.body.action;
-    console.log("userId: "+userId);
-    console.log(req.query);
-    console.log(req.body);
-    console.log("Action: "+action);
+exports.saveUpdateUser = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        const userId = request.query.userId;
+        const userData = request.body;
+        console.log("userId: " + userId);
+        console.log(request.query);
+        console.log(request.body);
+        console.log("Request method: "+request.method);
 
-    switch(action)
-    {
-        case "CREATE_USER":
-        return admin.database().ref('/users/'+userId).set(data, (error)  => {
-            //console.log(snapshot);
-            if(error)
-            {
-                console.log("Error occurred while saving user: "+error);
-                return res.json("Error occurred while saving user: "+error);
-            }
-            else
-            {
-                console.log("User saved successfully");
-                return res.json("User saved successfully");
+        admin.database().ref('/users/' + userId).once('value', (snapshot) => {
+            var data = snapshot.val();
+            console.log(data);
+            console.log(snapshot.val() === null);
+
+            if (snapshot.val() === null) {
+                admin.database().ref('/users/' + userId).set(userData, (error) => {
+                    //console.log(snapshot);
+                    if (error) {
+                        console.log("Error occurred while saving user: " + error);
+                        response.send(error);
+                    } else {
+                        console.log("User saved successfully");
+                        response.send("User saved successfully");
+                    }
+                });
+            } else {
+                admin.database().ref('/users/' + userId).update(userData, (error) => {
+                    //console.log(snapshot);
+                    if (error) {
+                        console.log("Error occurred while updating user: " + error);
+                        response.send(error);
+                    } else {
+                        console.log("User updated successfully");
+                        response.send("User updated successfully");
+                    }
+                });
             }
         });
-        case "UPDATE_USER":
-        return admin.database().ref('/users/'+userId).update(data, (error)  => {
-            //console.log(snapshot);
-            if(error)
-            {
-                console.log("Error occurred while updating user: "+error);
-                return res.json("Error occurred while updating user: "+error);
-            }
-            else
-            {
-                console.log("User updated successfully");
-                return res.json("User updated successfully");
-            }
-        });
-    }
-    
+    });
 });
 
-exports.getUser = functions.https.onRequest((req,res) => {
-    const userId = req.query.userId;
-    console.log("userId: "+userId);
+// Get user Info
+// **URL FORMAT**
+//saveUpdateUser?userId=myuserid6
+exports.getUser = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        const userId = request.query.userId;
+        console.log("userId: " + userId);
 
-    return admin.database().ref('/users/'+userId).once('value', (snapshot) => {
-        var data = snapshot.val();
-        console.log(data);
-        res.json(data);
-     });
+        admin.database().ref('/users/' + userId).once('value', (snapshot) => {
+            var data = snapshot.val();
+            console.log(data);
+            response.send(data);
+        });
+    });
+});
+
+// Create/Update Team
+// **URL FORMAT**
+//saveUpdateTeam?teamName=team-one
+// **JSON FORMAT**
+// {
+//     "admins":["user1","user2"],
+//     "companyName":"Sapient"
+// }
+exports.saveUpdateTeam = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        const teamId = request.query.teamName;
+        const teamData = request.body;
+        console.log("teamId: " + teamId);
+        console.log(request.query);
+        console.log(request.body);
+        console.log("Request method: "+request.method);
+
+        admin.database().ref('/teams/' + teamId).once('value', (snapshot) => {
+            var data = snapshot.val();
+            console.log(data);
+            console.log(snapshot.val() === null);
+
+            if (snapshot.val() === null) {
+                admin.database().ref('/teams/' + teamId).set(teamData, (error) => {
+                    //console.log(snapshot);
+                    if (error) {
+                        console.log("Error occurred while saving team: " + error);
+                        response.send(error);
+                    } else {
+                        console.log("Team saved successfully");
+                        response.send("Team saved successfully");
+                    }
+                });
+            } else {
+                admin.database().ref('/teams/' + teamId).update(teamData, (error) => {
+                    //console.log(snapshot);
+                    if (error) {
+                        console.log("Error occurred while updating team: " + error);
+                        response.send(error);
+                    } else {
+                        console.log("Team updated successfully");
+                        response.send("Team updated successfully");
+                    }
+                });
+            }
+        });
+    });
+});
+
+// Get user Info
+// **URL FORMAT**
+//saveUpdateTeam?teamName=team-one
+exports.getTeam = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        const teamId = request.query.teamName;
+        console.log("teamId: " + teamId);
+
+        admin.database().ref('/teams/' + teamId).once('value', (snapshot) => {
+            var data = snapshot.val();
+            console.log(data);
+            response.send(data);
+        });
+    });
 });
